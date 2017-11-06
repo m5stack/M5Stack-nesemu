@@ -28,6 +28,7 @@
 #include "driver/periph_ctrl.h"
 #include "spi_lcd.h"
 #include "driver/spi_master.h"
+#include "driver/ledc.h"
 
 #define PIN_NUM_MISO GPIO_NUM_19
 #define PIN_NUM_MOSI GPIO_NUM_23
@@ -130,7 +131,9 @@ void lcd_init(spi_device_handle_t spi)
     //Initialize non-SPI GPIOs
     gpio_set_direction(PIN_NUM_DC, GPIO_MODE_OUTPUT);
     gpio_set_direction(PIN_NUM_RST, GPIO_MODE_OUTPUT);
-    gpio_set_direction(PIN_NUM_BCKL, GPIO_MODE_OUTPUT);
+    // gpio_set_direction(PIN_NUM_BCKL, GPIO_MODE_OUTPUT);
+    
+    // gpio_set_direction(GPIO_NUM_25, GPIO_MODE_INPUT);
 
     //Reset the display
     gpio_set_level(PIN_NUM_RST, 0);
@@ -162,7 +165,7 @@ void lcd_init(spi_device_handle_t spi)
     }
 
     ///Enable backlight
-    gpio_set_level(PIN_NUM_BCKL, 1);
+    // gpio_set_level(PIN_NUM_BCKL, 1);
 }
 
 void lcd_spi_pre_transfer_callback(spi_transaction_t *t) 
@@ -225,7 +228,7 @@ static void LCD_WriteData(const uint8_t data)
 
 static void  ILI9341_INITIAL ()
 {
-    LCD_BKG_ON();
+    // LCD_BKG_ON();
     //------------------------------------Reset Sequence-----------------------------------------//
 
     LCD_RST_SET();
@@ -366,13 +369,59 @@ static void  ILI9341_INITIAL ()
 
 }
 //.............LCD API END----------
+void setBrightness() {
+
+    #define LEDC_HS_TIMER          LEDC_TIMER_0
+    #define LEDC_HS_MODE           LEDC_HIGH_SPEED_MODE
+    #define LEDC_HS_CH0_GPIO       (32)
+    #define LEDC_HS_CH0_CHANNEL    LEDC_CHANNEL_0
+    
+    #define LEDC_LS_TIMER          LEDC_TIMER_1
+    #define LEDC_LS_MODE           LEDC_LOW_SPEED_MODE
+    #define LEDC_LS_CH2_GPIO       (4)
+    #define LEDC_LS_CH2_CHANNEL    LEDC_CHANNEL_2
+    #define LEDC_LS_CH3_GPIO       (5)
+    #define LEDC_LS_CH3_CHANNEL    LEDC_CHANNEL_3
+    
+    #define LEDC_TEST_CH_NUM       (4)
+    #define LEDC_TEST_DUTY         (4000)
+    #define LEDC_TEST_FADE_TIME    (3000)
+
+    ledc_timer_config_t ledc_timer = {
+        .bit_num = LEDC_TIMER_13_BIT, // resolution of PWM duty
+        .freq_hz = 5000,              // frequency of PWM signal
+        .speed_mode = LEDC_HS_MODE,   // timer mode
+        .timer_num = LEDC_HS_TIMER    // timer index
+    };
+    // Set configuration of timer0 for high speed channels
+    ledc_timer_config(&ledc_timer);
+    
+    ledc_channel_config_t ledc_channel = 
+    {
+        .channel    = LEDC_HS_CH0_CHANNEL,
+        .duty       = 0,
+        .gpio_num   = LEDC_HS_CH0_GPIO,
+        .speed_mode = LEDC_HS_MODE,
+        .timer_sel  = LEDC_HS_TIMER
+    };
+    ledc_channel_config(&ledc_channel);
+
+    // Initialize fade service.
+    // ledc_fade_func_install(0);
+
+    ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, LEDC_TEST_DUTY);
+    ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
+
+}
 
 static void ili_gpio_init()
 {
     gpio_set_direction(PIN_NUM_DC, GPIO_MODE_OUTPUT);
     gpio_set_direction(PIN_NUM_RST, GPIO_MODE_OUTPUT);
-    gpio_set_direction(PIN_NUM_BCKL, GPIO_MODE_OUTPUT);
+    // gpio_set_direction(PIN_NUM_BCKL, GPIO_MODE_OUTPUT);
     gpio_set_direction(PIN_NUM_CS, GPIO_MODE_OUTPUT);
+
+    // setBrightness();
 }
 
 static void spi_master_init()
@@ -497,6 +546,7 @@ void ili9341_init()
     // spi_master_init();
     // ili_gpio_init();
     ili9341_spi_init();
+    setBrightness();
     // ILI9341_INITIAL ();
 }
 

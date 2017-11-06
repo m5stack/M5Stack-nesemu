@@ -79,8 +79,9 @@ static void do_audio_frame() {
 		audio_callback(audio_frame, n); //get more data
 		//16 bit mono -> 32-bit (16 bit r+l)
 		for (int i=n-1; i>=0; i--) {
-			audio_frame[i*2+1]=audio_frame[i];
-			audio_frame[i*2]=audio_frame[i];
+			// audio_frame[i*2+1]=0;
+			audio_frame[i*2+1]=audio_frame[i]>>4;
+			audio_frame[i*2]=audio_frame[i]>>4;
 		}
 		i2s_write_bytes(0, audio_frame, 4*n, portMAX_DELAY);
 		left-=n;
@@ -109,19 +110,20 @@ static int osd_init_sound(void)
 		.sample_rate=DEFAULT_SAMPLERATE,
 		.bits_per_sample=I2S_BITS_PER_SAMPLE_16BIT,
 		.channel_format=I2S_CHANNEL_FMT_RIGHT_LEFT,
-		.communication_format=I2S_COMM_FORMAT_I2S_MSB,
+		.communication_format=I2S_COMM_FORMAT_I2S_LSB,
 		.intr_alloc_flags=0,
 		.dma_buf_count=4,
 		.dma_buf_len=512
 	};
 	i2s_driver_install(0, &cfg, 4, &queue);
 	i2s_set_pin(0, NULL);
-	i2s_set_dac_mode(I2S_DAC_CHANNEL_LEFT_EN); 
+	// i2s_set_dac_mode(I2S_DAC_CHANNEL_LEFT_EN); 
+	i2s_set_dac_mode(I2S_DAC_CHANNEL_RIGHT_EN); 
 
 	//I2S enables *both* DAC channels; we only need DAC1.
 	//ToDo: still needed now I2S supports set_dac_mode?
-	CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_DAC_XPD_FORCE_M);
-	CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_XPD_DAC_M);
+	CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC2_REG, RTC_IO_PDAC2_DAC_XPD_FORCE_M);
+	CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC2_REG, RTC_IO_PDAC2_XPD_DAC_M);
 
 #endif
 
@@ -279,7 +281,7 @@ void osd_getinput(void)
 	int x;
 	oldb=b;
 	event_t evh;
-//	printf("Input: %x\n", b);
+	printf("Input: %x\n", b);
 	for (x=0; x<16; x++) {
 		if (chg&1) {
 			evh=event_get(ev[x]);

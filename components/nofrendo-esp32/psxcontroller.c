@@ -131,13 +131,114 @@ void psxcontrollerInit() {
 
 #else
 
+//返回值:
+//[0]:右
+//[1]:左
+//[2]:下
+//[3]:上
+//[4]:Start
+//[5]:Select
+//[6]:B
+//[7]:A
+
+#define bit_joypad1_select 0
+#define bit_joypad1_start  3
+#define bit_joypad1_up     4
+#define bit_joypad1_right  5
+#define bit_joypad1_down   6
+#define bit_joypad1_left   7
+#define bit_soft_reset     12
+#define bit_joypad1_a      13
+#define bit_joypad1_b      14
+#define bit_hard_reset     15
+
+#define KEY_A_PIN      35
+#define KEY_B_PIN      36
+#define KEY_UP_PIN     13
+#define KEY_DOWN_PIN   15
+#define KEY_LEFT_PIN   34
+#define KEY_RIGHT_PIN  17
+#define KEY_SELECT_PIN 16
+#define KEY_START_PIN  5
+
 int psxReadInput() {
-	return 0xFFFF;
+	uint16_t retval = 0;
+	// static int pre_val;
+
+	if(gpio_get_level(KEY_A_PIN)) {
+		retval |=  1<<bit_joypad1_a;
+	} else {
+		retval &= ~(1<<bit_joypad1_a);
+	}
+
+	if(gpio_get_level(KEY_B_PIN)) {
+		retval |=  1<<bit_joypad1_b;
+	} else {
+		retval &= ~(1<<bit_joypad1_b);
+	}
+
+	if(gpio_get_level(KEY_UP_PIN)) {
+		retval |=  1<<bit_joypad1_up;
+	} else {
+		retval &= ~(1<<bit_joypad1_up);
+	}
+
+	if(gpio_get_level(KEY_DOWN_PIN)) {
+		retval |=  1<<bit_joypad1_down;
+	} else {
+		retval &= ~(1<<bit_joypad1_down);
+	}
+
+	if(gpio_get_level(KEY_LEFT_PIN)) {
+		retval |=  1<<bit_joypad1_left;
+	} else {
+		retval &= ~(1<<bit_joypad1_left);
+	}
+
+	if(gpio_get_level(KEY_RIGHT_PIN)) {
+		retval |=  1<<bit_joypad1_right;
+	} else {
+		retval &= ~(1<<bit_joypad1_right);
+	}
+
+	if(gpio_get_level(KEY_SELECT_PIN)) {
+		retval |=  1<<bit_joypad1_select;
+	} else {
+		retval &= ~(1<<bit_joypad1_select);
+	}
+
+	if(gpio_get_level(KEY_START_PIN)) {
+		retval |=  1<<bit_joypad1_start;
+	} else {
+		retval &= ~(1<<bit_joypad1_start);
+	}
+	
+	printf("press key: 0x%x \r\n", retval);
+	// printf("press key: 0x%x \r\n", retval);
+	return (int)retval;
 }
 
 
 void psxcontrollerInit() {
 	printf("PSX controller disabled in menuconfig; no input enabled.\n");
+	 
+	gpio_set_direction(KEY_A_PIN, GPIO_MODE_INPUT);
+	gpio_set_direction(KEY_B_PIN, GPIO_MODE_INPUT);
+	gpio_set_direction(KEY_UP_PIN, GPIO_MODE_INPUT);
+	gpio_set_direction(KEY_DOWN_PIN, GPIO_MODE_INPUT);
+	gpio_set_direction(KEY_LEFT_PIN, GPIO_MODE_INPUT);
+	gpio_set_direction(KEY_RIGHT_PIN, GPIO_MODE_INPUT);
+	gpio_set_direction(KEY_SELECT_PIN, GPIO_MODE_INPUT);
+	gpio_set_direction(KEY_START_PIN, GPIO_MODE_INPUT);
+	
+	gpio_pullup_en(KEY_A_PIN);
+	gpio_pullup_en(KEY_B_PIN);
+	gpio_pullup_en(KEY_UP_PIN);
+	gpio_pullup_en(KEY_DOWN_PIN);
+	gpio_pullup_en(KEY_LEFT_PIN);
+	gpio_pullup_en(KEY_RIGHT_PIN);
+	gpio_pullup_en(KEY_SELECT_PIN);
+	gpio_pullup_en(KEY_START_PIN);
 }
 
 #endif
