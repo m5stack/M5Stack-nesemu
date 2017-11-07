@@ -1,7 +1,6 @@
 ESP32-NESEMU, a Nintendo Entertainment System emulator for the ESP32
 ====================================================================
 
-forked from https://github.com/espressif/esp32-nesemu
 This is a quick and dirty port of Nofrendo, a Nintendo Entertainment System emulator. It lacks sound, but can emulate a NES at close
 to full speed, albeit with some framedrop due to the way the display is driven.
 
