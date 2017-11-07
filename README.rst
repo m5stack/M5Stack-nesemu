@@ -1,6 +1,7 @@
 ESP32-NESEMU, a Nintendo Entertainment System emulator for the ESP32
 ====================================================================
 
+forked from https://github.com/espressif/esp32-nesemu
 This is a quick and dirty port of Nofrendo, a Nintendo Entertainment System emulator. It lacks sound, but can emulate a NES at close
 to full speed, albeit with some framedrop due to the way the display is driven.
 
@@ -14,8 +15,7 @@ Compiling
 ---------
 
 This code is an esp-idf project. You will need esp-idf to compile it. Newer versions of esp-idf may introduce incompatibilities with this code;
-for your reference, the code was tested against commit 12caaed28063e32d8b1fb13e13548b6fa52f87b3 of esp-idf.
-
+for your reference.
 
 Display
 -------
@@ -25,13 +25,13 @@ To display the NES output, please connect a 320x240 ili9341-based SPI display to
     =====  =======================
     Pin    GPIO
     =====  =======================
-    MISO   25
+    MISO   19
     MOSI   23
-    CLK    19
-    CS     22
-    DC     21
-    RST    18
-    BCKL   5
+    CLK    18
+    CS     14
+    DC     27
+    RST    33
+    BCKL   32
     =====  =======================
 
 (BCKL = backlight enable)
