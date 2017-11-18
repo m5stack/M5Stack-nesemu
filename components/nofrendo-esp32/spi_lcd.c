@@ -208,26 +208,16 @@ void ili9341_spi_init()
 
 
 //.............LCD API END----------
-void setBrightness() {
+void lcd_setBrightness(int duty) {
 
     #define LEDC_HS_TIMER          LEDC_TIMER_0
     #define LEDC_HS_MODE           LEDC_HIGH_SPEED_MODE
     #define LEDC_HS_CH0_GPIO       (32)
-    #define LEDC_HS_CH0_CHANNEL    LEDC_CHANNEL_0
-    
-    #define LEDC_LS_TIMER          LEDC_TIMER_1
-    #define LEDC_LS_MODE           LEDC_LOW_SPEED_MODE
-    #define LEDC_LS_CH2_GPIO       (4)
-    #define LEDC_LS_CH2_CHANNEL    LEDC_CHANNEL_2
-    #define LEDC_LS_CH3_GPIO       (5)
-    #define LEDC_LS_CH3_CHANNEL    LEDC_CHANNEL_3
-    
-    #define LEDC_TEST_CH_NUM       (4)
-    #define LEDC_TEST_DUTY         (4000)
-    #define LEDC_TEST_FADE_TIME    (3000)
+    #define LEDC_HS_CH0_CHANNEL    LEDC_CHANNEL_0    
+    #define LEDC_TEST_DUTY         (10)
 
     ledc_timer_config_t ledc_timer = {
-        .bit_num = LEDC_TIMER_13_BIT, // resolution of PWM duty
+        .bit_num = LEDC_TIMER_10_BIT, // resolution of PWM duty
         .freq_hz = 5000,              // frequency of PWM signal
         .speed_mode = LEDC_HS_MODE,   // timer mode
         .timer_num = LEDC_HS_TIMER    // timer index
@@ -248,7 +238,7 @@ void setBrightness() {
     // Initialize fade service.
     // ledc_fade_func_install(0);
 
-    ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, LEDC_TEST_DUTY);
+    ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, duty);
     ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
 }
 
@@ -325,7 +315,7 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
 void ili9341_init()
 {
     ili9341_spi_init();
-    setBrightness();
+    lcd_setBrightness(800);
 }
 
 
