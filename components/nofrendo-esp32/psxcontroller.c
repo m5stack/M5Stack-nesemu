@@ -23,6 +23,7 @@
 #include "soc/gpio_struct.h"
 #include "psxcontroller.h"
 #include "sdkconfig.h"
+#include "i2c_keyboard.h"
 
 #define PSX_CLK CONFIG_HW_PSX_CLK
 #define PSX_DAT CONFIG_HW_PSX_DAT
@@ -131,15 +132,72 @@ void psxcontrollerInit() {
 
 #else
 
-//返回值:
-//[0]:右
-//[1]:左
-//[2]:下
-//[3]:上
-//[4]:Start
-//[5]:Select
-//[6]:B
-//[7]:A
+
+#define DATA_LENGTH                        512              /*!<Data buffer length for test buffer*/
+#define RW_TEST_LENGTH                     129              /*!<Data length for r/w test, any value from 0-DATA_LENGTH*/
+#define DELAY_TIME_BETWEEN_ITEMS_MS        1234             /*!< delay time between different test items */
+
+#define I2C_KEYBOARD_SCL_IO          19               /*!< gpio number for I2C master clock */
+#define I2C_KEYBOARD_SDA_IO          18               /*!< gpio number for I2C master data  */
+#define I2C_KEYBOARD_NUM             I2C_NUM_0        /*!< I2C port number for master dev */
+#define I2C_KEYBOARD_TX_BUF_DISABLE  0                /*!< I2C master do not need buffer */
+#define I2C_KEYBOARD_RX_BUF_DISABLE  0                /*!< I2C master do not need buffer */
+#define I2C_KEYBOARD_FREQ_HZ         100000           /*!< I2C master clock frequency */
+#define I2C_KEYBOARD_ADDR            0x88
+
+#define ESP_SLAVE_ADDR                     0x28             /*!< ESP32 slave address, you can set any 7bit value */
+#define WRITE_BIT                          I2C_MASTER_WRITE /*!< I2C master write */
+#define READ_BIT                           I2C_MASTER_READ  /*!< I2C master read */
+#define ACK_CHECK_EN                       0x1              /*!< I2C master will check ack from slave*/
+#define ACK_CHECK_DIS                      0x0              /*!< I2C master will not check ack from slave */
+#define ACK_VAL                            0x0              /*!< I2C ack value */
+#define NACK_VAL                           0x1              /*!< I2C nack value */
+
+// SemaphoreHandle_t print_mux = NULL;
+
+void i2c_keyboard_master_init()
+{
+    int i2c_master_port = I2C_KEYBOARD_NUM;
+    i2c_config_t conf;
+    conf.mode = I2C_MODE_MASTER;
+    conf.sda_io_num = GPIO_NUM_21;
+    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.scl_io_num = GPIO_NUM_22;
+    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.master.clk_speed = I2C_KEYBOARD_FREQ_HZ;
+    i2c_param_config(i2c_master_port, &conf);
+    i2c_driver_install(i2c_master_port, conf.mode,
+                       I2C_KEYBOARD_RX_BUF_DISABLE,
+                       I2C_KEYBOARD_TX_BUF_DISABLE, 0);
+}
+
+/**
+ * @brief test code to write esp-i2c-slave
+ *
+ * 1. set mode
+ * _________________________________________________________________
+ * | start | slave_addr + wr_bit + ack | write 1 byte + ack  | stop |
+ * --------|---------------------------|---------------------|------|
+ * 2. wait more than 24 ms
+ * 3. read data
+ * ______________________________________________________________________________________
+ * | start | slave_addr + rd_bit + ack | read 1 byte + ack  | read 1 byte + nack | stop |
+ * --------|---------------------------|--------------------|--------------------|------|
+ */
+uint8_t i2c_keyboard_read()
+{
+    uint8_t ret;
+    // i2c_port_t i2c_num = I2C_KEYBOARD_NUM;
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (uint8_t)(I2C_KEYBOARD_ADDR << 1) | READ_BIT, ACK_CHECK_EN);
+    i2c_master_read_byte(cmd, &ret, NACK_VAL);
+    i2c_master_stop(cmd);
+    i2c_master_cmd_begin(I2C_KEYBOARD_NUM, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    return ret;
+}
 
 #define bit_joypad1_select 0
 #define bit_joypad1_start  3
@@ -152,93 +210,97 @@ void psxcontrollerInit() {
 #define bit_joypad1_b      14
 #define bit_hard_reset     15
 
-#define KEY_A_PIN      35
-#define KEY_B_PIN      36
-#define KEY_UP_PIN     13
-#define KEY_DOWN_PIN   15
-#define KEY_LEFT_PIN   34
-#define KEY_RIGHT_PIN  17
-#define KEY_SELECT_PIN 16
-#define KEY_START_PIN  5
+// #define KEY_A_PIN      35
+// #define KEY_B_PIN      36
+// #define KEY_UP_PIN     13
+// #define KEY_DOWN_PIN   15
+// #define KEY_LEFT_PIN   34
+// #define KEY_RIGHT_PIN  17
+// #define KEY_SELECT_PIN 16
+// #define KEY_START_PIN  5
+
+#define KEY_UP         0X01
+#define KEY_DOWN       0X02
+#define KEY_LEFT       0X04
+#define KEY_RIGHT      0X08
+#define KEY_A          0X10
+#define KEY_B          0X20
+#define KEY_SELECT     0X40
+#define KEY_START      0X80
+
 
 int psxReadInput() {
+	static uint16_t pre_retval = 0;
 	uint16_t retval = 0;
-	// static int pre_val;
+	uint8_t key_value = 0xff;
 
-	if(gpio_get_level(KEY_A_PIN)) {
-		retval |=  1<<bit_joypad1_a;
+	if(gpio_get_level(5) == 0) {
+		key_value = i2c_keyboard_read();
+		printf("key is:0x%x \r\n", key_value);
+
+		if((key_value & KEY_A) != 0) {
+			retval |=  1<<bit_joypad1_a;
+		} else {
+			retval &= ~(1<<bit_joypad1_a);
+		}
+
+		if(key_value & KEY_B) {
+			retval |=  1<<bit_joypad1_b;
+		} else {
+			retval &= ~(1<<bit_joypad1_b);
+		}
+
+		if(key_value & KEY_UP) {
+			retval |=  1<<bit_joypad1_up;
+		} else {
+			retval &= ~(1<<bit_joypad1_up);
+		}
+
+		if(key_value & KEY_DOWN) {
+			retval |=  1<<bit_joypad1_down;
+		} else {
+			retval &= ~(1<<bit_joypad1_down);
+		}
+
+		if(key_value & KEY_LEFT) {
+			retval |=  1<<bit_joypad1_left;
+		} else {
+			retval &= ~(1<<bit_joypad1_left);
+		}
+
+		if(key_value & KEY_RIGHT) {
+			retval |=  1<<bit_joypad1_right;
+		} else {
+			retval &= ~(1<<bit_joypad1_right);
+		}
+
+		if(key_value & KEY_SELECT) {
+			retval |=  1<<bit_joypad1_select;
+		} else {
+			retval &= ~(1<<bit_joypad1_select);
+		}
+
+		if((key_value & KEY_START) != 0) {
+			retval |=  1<<bit_joypad1_start;
+		} else {
+			retval &= ~(1<<bit_joypad1_start);
+		}
 	} else {
-		retval &= ~(1<<bit_joypad1_a);
+		retval = pre_retval;
 	}
 
-	if(gpio_get_level(KEY_B_PIN)) {
-		retval |=  1<<bit_joypad1_b;
-	} else {
-		retval &= ~(1<<bit_joypad1_b);
-	}
-
-	if(gpio_get_level(KEY_UP_PIN)) {
-		retval |=  1<<bit_joypad1_up;
-	} else {
-		retval &= ~(1<<bit_joypad1_up);
-	}
-
-	if(gpio_get_level(KEY_DOWN_PIN)) {
-		retval |=  1<<bit_joypad1_down;
-	} else {
-		retval &= ~(1<<bit_joypad1_down);
-	}
-
-	if(gpio_get_level(KEY_LEFT_PIN)) {
-		retval |=  1<<bit_joypad1_left;
-	} else {
-		retval &= ~(1<<bit_joypad1_left);
-	}
-
-	if(gpio_get_level(KEY_RIGHT_PIN)) {
-		retval |=  1<<bit_joypad1_right;
-	} else {
-		retval &= ~(1<<bit_joypad1_right);
-	}
-
-	if(gpio_get_level(KEY_SELECT_PIN)) {
-		retval |=  1<<bit_joypad1_select;
-	} else {
-		retval &= ~(1<<bit_joypad1_select);
-	}
-
-	if(gpio_get_level(KEY_START_PIN)) {
-		retval |=  1<<bit_joypad1_start;
-	} else {
-		retval &= ~(1<<bit_joypad1_start);
-	}
-	
-	printf("press key: 0x%x \r\n", retval);
-	// printf("press key: 0x%x \r\n", retval);
+	pre_retval = retval;
 	return (int)retval;
 }
 
 
 void psxcontrollerInit() {
 	printf("PSX controller disabled in menuconfig; no input enabled.\n");
-	 
-	gpio_set_direction(KEY_A_PIN, GPIO_MODE_INPUT);
-	gpio_set_direction(KEY_B_PIN, GPIO_MODE_INPUT);
-	gpio_set_direction(KEY_UP_PIN, GPIO_MODE_INPUT);
-	gpio_set_direction(KEY_DOWN_PIN, GPIO_MODE_INPUT);
-	gpio_set_direction(KEY_LEFT_PIN, GPIO_MODE_INPUT);
-	gpio_set_direction(KEY_RIGHT_PIN, GPIO_MODE_INPUT);
-	gpio_set_direction(KEY_SELECT_PIN, GPIO_MODE_INPUT);
-	gpio_set_direction(KEY_START_PIN, GPIO_MODE_INPUT);
 	
-	gpio_pullup_en(KEY_A_PIN);
-	gpio_pullup_en(KEY_B_PIN);
-	gpio_pullup_en(KEY_UP_PIN);
-	gpio_pullup_en(KEY_DOWN_PIN);
-	gpio_pullup_en(KEY_LEFT_PIN);
-	gpio_pullup_en(KEY_RIGHT_PIN);
-	gpio_pullup_en(KEY_SELECT_PIN);
-	gpio_pullup_en(KEY_START_PIN);
+	gpio_set_direction(5, GPIO_MODE_INPUT);
+	gpio_pullup_en(5);
+
+	i2c_keyboard_master_init();
 }
 
 #endif

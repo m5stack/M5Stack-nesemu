@@ -80,8 +80,8 @@ static void do_audio_frame() {
 		//16 bit mono -> 32-bit (16 bit r+l)
 		for (int i=n-1; i>=0; i--) {
 			// audio_frame[i*2+1]=0;
-			audio_frame[i*2+1]=audio_frame[i]>>4;
-			audio_frame[i*2]=audio_frame[i]>>4;
+			audio_frame[i*2+1]=audio_frame[i]>>5;
+			audio_frame[i*2]=audio_frame[i]>>5;
 		}
 		i2s_write_bytes(0, audio_frame, 4*n, portMAX_DELAY);
 		left-=n;
@@ -281,7 +281,7 @@ void osd_getinput(void)
 	int x;
 	oldb=b;
 	event_t evh;
-	printf("Input: %x\n", b);
+	// printf("Input: %x\n", b);
 	for (x=0; x<16; x++) {
 		if (chg&1) {
 			evh=event_get(ev[x]);
