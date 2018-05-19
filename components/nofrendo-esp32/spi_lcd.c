@@ -187,7 +187,7 @@ void ili9341_spi_init()
     };
     spi_device_interface_config_t devcfg={
         // .clock_speed_hz=10*1000*1000,               //Clock out at 10 MHz
-        .clock_speed_hz=32*1000*1000,               //Clock out at 10 MHz
+        .clock_speed_hz=40*1000*1000,               //Clock out at 10 MHz
         .mode=0,                                //SPI mode 0
         .spics_io_num=PIN_NUM_CS,               //CS pin
         .queue_size=7,                          //We want to be able to queue 7 transactions at a time
@@ -317,8 +317,3 @@ void ili9341_init()
     ili9341_spi_init();
     lcd_setBrightness(800);
 }
-
-
-
-
-
