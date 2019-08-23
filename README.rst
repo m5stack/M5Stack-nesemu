@@ -1,8 +1,7 @@
 ESP32-NESEMU, a Nintendo Entertainment System emulator for the ESP32
 ====================================================================
 
-This is a quick and dirty port of Nofrendo, a Nintendo Entertainment System emulator. It lacks sound, but can emulate a NES at close
-to full speed, albeit with some framedrop due to the way the display is driven.
+This is a quick and dirty port of Nofrendo, a Nintendo Entertainment System emulator. It has basic sound support, but can emulate a NES at close to full speed, albeit with some framedrop due to the way the display is driven.
 
 Warning
 -------
@@ -16,48 +15,15 @@ Compiling
 This code is an esp-idf project. You will need esp-idf to compile it. Newer versions of esp-idf may introduce incompatibilities with this code;
 for your reference.
 
-Display
--------
-
-To display the NES output, please connect a 320x240 ili9341-based SPI display to the ESP32 in this way:
-
-    =====  =======================
-    Pin    GPIO
-    =====  =======================
-    MISO   19
-    MOSI   23
-    CLK    18
-    CS     14
-    DC     27
-    RST    33
-    BCKL   32
-    =====  =======================
-
-(BCKL = backlight enable)
-
-Also connect the power supply and ground. For now, the LCD is controlled using a SPI peripheral, fed using the 2nd CPU. This is less than ideal; feeding
-the SPI controller using DMA is better, but was left out due to this being a proof of concept.
-
-
 Controller
 ----------
 
-To control the NES, connect a Playstation 1 or 2 controller as such:
-
-    =====  =====
-    Pin    GPIO
-    =====  =====
-    CLK    14
-    DAT    27
-    ATT    16
-    CMD    2
-    =====  =====
-
-Also connect the power and ground lines. Most PS1/PS2 controllers work fine from a 3.3V power supply, if a 5V one is unavailable.
+This emulator fully supports the Faces Gamepad kit: https://m5stack.com/collections/all/products/face
 
 ROM
 ---
-This NES emulator does not come with a ROM. Please supply your own and flash to address 0x00100000. You can use the flashrom.sh script as a template for doing so.
+This NES emulator comes with a public domain ROM. If you want to use your own, please remember official nintendo roms are under copyright and the user bears the responsibility for any legal action. In order to upload a different rom change the 
+.nes filename to the name of your rom in the flash.sh script in the firmware folder. Use esptool to flash the files to the device.
 
 Copyright
 ---------
