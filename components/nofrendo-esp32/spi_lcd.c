@@ -127,6 +127,9 @@ void lcd_init(spi_device_handle_t spi)
 {
     int cmd=0;
     const lcd_init_cmd_t* lcd_init_cmds;
+    gpio_set_direction(PIN_NUM_RST, GPIO_MODE_INPUT);
+    vTaskDelay(1 / portTICK_RATE_MS);
+    bool lcd_version = gpio_get_level(PIN_NUM_RST);
 
     //Initialize non-SPI GPIOs
     gpio_set_direction(PIN_NUM_DC, GPIO_MODE_OUTPUT);
@@ -163,7 +166,7 @@ void lcd_init(spi_device_handle_t spi)
         }
         cmd++;
     }
-
+    if(lcd_version) lcd_cmd(spi, 0x21);
     ///Enable backlight
     // gpio_set_level(PIN_NUM_BCKL, 1);
 }
