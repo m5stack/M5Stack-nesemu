@@ -1,0 +1,1 @@
+esptool.py --chip esp32 --port /dev/tty.SLAB_USBtoUART --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 firmware.bin 0x100000 BladeBuster.nes
