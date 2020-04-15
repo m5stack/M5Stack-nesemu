@@ -13,7 +13,7 @@ Compiling
 ---------
 
 This code is an esp-idf project. You will need esp-idf to compile it. Newer versions of esp-idf may introduce incompatibilities with this code;
-for your reference.
+for your reference. esp-idf test work well version: v3.3-rc-dirty
 
 Controller
 ----------
