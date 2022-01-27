@@ -3,5 +3,6 @@
 
 int psxReadInput();
 void psxcontrollerInit();
+void initGPIO(int gpioNo);
 
 #endif

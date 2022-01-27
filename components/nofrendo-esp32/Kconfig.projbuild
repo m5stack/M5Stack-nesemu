@@ -141,10 +141,61 @@ config SOUND_ENA
 
 config HW_PSX_ENA
 	bool "Enable PSX controller input"
-	default y
+	default n
 	help
 		If you connect a PSX/PS2 controller to the following GPIOs, you can control the NES.
 
+config HW_GPIO_ENA
+	bool "Enable GPIO controller input"
+	default n
+
+config HW_GPIO_UP
+	int "Up Control"
+	depends on HW_GPIO_ENA
+	range 1 39
+	default 3
+
+config HW_GPIO_DOWN
+	int "Down Control"
+	depends on HW_GPIO_ENA
+	range 1 39
+	default 1
+
+config HW_GPIO_RIGHT
+	int "Right Control"
+	depends on HW_GPIO_ENA
+	range 1 39
+	default 16
+
+config HW_GPIO_LEFT
+	int "Left Control"
+	depends on HW_GPIO_ENA
+	range 1 39
+	default 17
+
+config HW_GPIO_A
+	int "A Control"
+	depends on HW_GPIO_ENA
+	range 1 39
+	default 5
+
+config HW_GPIO_B
+	int "B Control"
+	depends on HW_GPIO_ENA
+	range 1 39
+	default 2
+
+config HW_GPIO_SELECT
+	int "Select Control"
+	depends on HW_GPIO_ENA
+	range 1 39
+	default 37
+
+config HW_GPIO_START
+	int "Start Control"
+	depends on HW_GPIO_ENA
+	range 1 39
+	default 38
 
 config HW_PSX_CLK
 	int "PSX controller CLK GPIO pin"
