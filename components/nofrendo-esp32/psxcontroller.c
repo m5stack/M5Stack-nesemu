@@ -26,6 +26,16 @@
 #include "i2c_keyboard.h"
 
 #define DELAY() asm("nop; nop; nop; nop;nop; nop; nop; nop;nop; nop; nop; nop;nop; nop; nop; nop;")
+#define bit_joypad1_select 0
+#define bit_joypad1_start  3
+#define bit_joypad1_up     4
+#define bit_joypad1_right  5
+#define bit_joypad1_down   6
+#define bit_joypad1_left   7
+#define bit_soft_reset     12
+#define bit_joypad1_a      13
+#define bit_joypad1_b      14
+#define bit_hard_reset     15
 
 void initGPIO(int gpioNo){
 	gpio_set_direction(gpioNo, GPIO_MODE_INPUT);
@@ -89,38 +99,6 @@ static void psxDone() {
 	DELAY();
 	GPIO_REG_WRITE(GPIO_OUT_W1TS_REG, (1<<PSX_ATT));
 }
-
-#define PSX_SELECT 1
-#define PSX_START (1 << 3)
-#define PSX_UP (1 << 4)
-#define PSX_RIGHT (1 << 5)
-#define PSX_DOWN (1 << 6)
-#define PSX_LEFT (1 << 7)
-#define PSX_L2 (1 << 8)
-#define PSX_R2 (1 << 9)
-#define PSX_L1 (1 << 10)
-#define PSX_R1 (1 << 11)
-#define PSX_TRIANGLE (1 << 12)
-#define PSX_CIRCLE (1 << 13)
-#define PSX_X (1 << 14)
-#define PSX_SQUARE (1 << 15)
-#define A_BUTTON PSX_CIRCLE
-#define B_BUTTON PSX_X
-#define TURBO_A_BUTTON PSX_TRIANGLE
-#define TURBO_B_BUTTON PSX_SQUARE
-#define MENU_BUTTON PSX_L1
-#define POWER_BUTTON PSX_R1
-
-#define bit_joypad1_select 0
-#define bit_joypad1_start  3
-#define bit_joypad1_up     4
-#define bit_joypad1_right  5
-#define bit_joypad1_down   6
-#define bit_joypad1_left   7
-#define bit_soft_reset     12
-#define bit_joypad1_a      13
-#define bit_joypad1_b      14
-#define bit_hard_reset     15
 
 int psxReadInput() {
 	int b2b1 = 65535;
@@ -243,19 +221,6 @@ void psxcontrollerInit() {
 
 
 #else
-
-
-#define bit_joypad1_select 0
-#define bit_joypad1_start  3
-#define bit_joypad1_up     4
-#define bit_joypad1_right  5
-#define bit_joypad1_down   6
-#define bit_joypad1_left   7
-#define bit_soft_reset     12
-#define bit_joypad1_a      13
-#define bit_joypad1_b      14
-#define bit_hard_reset     15
-
 // #define KEY_A_PIN      35
 // #define KEY_B_PIN      36
 // #define KEY_UP_PIN     13
