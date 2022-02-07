@@ -112,56 +112,29 @@ int psxReadInput() {
 	psxDone();
 	b2b1 = (b2<<8)|b1;
 #else
-	uint16_t retval = 0;
-	if (gpio_get_level(CONFIG_HW_GPIO_UP) == 1) {
-		retval |=  1<<bit_joypad1_up;
-	} else {
-		retval &= ~(1<<bit_joypad1_up);
-	}
+	if (gpio_get_level(CONFIG_HW_GPIO_UP) == 1)
+		b2b1 -=  1<<bit_joypad1_up;
 
-	if (gpio_get_level(CONFIG_HW_GPIO_DOWN) == 1) {
-		retval |=  1<<bit_joypad1_down;
-	} else {
-		retval &= ~(1<<bit_joypad1_down);
-	}
+	if (gpio_get_level(CONFIG_HW_GPIO_DOWN) == 1)
+		b2b1 -=  1<<bit_joypad1_down;
 
-	if (gpio_get_level(CONFIG_HW_GPIO_RIGHT) == 1) {
-		retval |=  1<<bit_joypad1_right;
-	} else {
-		retval &= ~(1<<bit_joypad1_right);
-	}
+	if (gpio_get_level(CONFIG_HW_GPIO_RIGHT) == 1)
+		b2b1 -=  1<<bit_joypad1_right;
 
-	if (gpio_get_level(CONFIG_HW_GPIO_LEFT) == 1) {
-		retval |=  1<<bit_joypad1_left;
-	} else {
-		retval &= ~(1<<bit_joypad1_left);
-	}
+	if (gpio_get_level(CONFIG_HW_GPIO_LEFT) == 1)
+		b2b1 -=  1<<bit_joypad1_left;
 
-	if (gpio_get_level(CONFIG_HW_GPIO_SELECT) == 1) {
-		retval |=  1<<bit_joypad1_select;
-	} else {
-		retval &= ~(1<<bit_joypad1_select);
-	}
+	if (gpio_get_level(CONFIG_HW_GPIO_SELECT) == 1)
+		b2b1 -=  1<<bit_joypad1_select;
 
-	if (gpio_get_level(CONFIG_HW_GPIO_START) == 1) {
-		retval |=  1<<bit_joypad1_start;
-	} else {
-		retval &= ~(1<<bit_joypad1_start);
-	}
+	if (gpio_get_level(CONFIG_HW_GPIO_START) == 1) 
+		b2b1 -=  1<<bit_joypad1_start;
 
-	if (gpio_get_level(CONFIG_HW_GPIO_B) == 1) {
-		retval |=  1<<bit_joypad1_b;
-	} else {
-		retval &= ~(1<<bit_joypad1_b);
-	}
+	if (gpio_get_level(CONFIG_HW_GPIO_B) == 1)
+		b2b1 -=  1<<bit_joypad1_b;
 
-	if (gpio_get_level(CONFIG_HW_GPIO_A) == 1) {
-		retval |=  1<<bit_joypad1_a;
-	} else {
-		retval &= ~(1<<bit_joypad1_a);
-	}
-
-	b2b1 = (int)retval;
+	if (gpio_get_level(CONFIG_HW_GPIO_A) == 1)
+		b2b1 -=  1<<bit_joypad1_a;
 		
 #endif
 	return b2b1;
