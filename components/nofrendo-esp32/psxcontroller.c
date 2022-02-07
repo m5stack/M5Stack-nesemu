@@ -25,15 +25,40 @@
 #include "sdkconfig.h"
 #include "i2c_keyboard.h"
 
+#define DELAY() asm("nop; nop; nop; nop;nop; nop; nop; nop;nop; nop; nop; nop;nop; nop; nop; nop;")
+#define bit_joypad1_select 0
+#define bit_joypad1_start  3
+#define bit_joypad1_up     4
+#define bit_joypad1_right  5
+#define bit_joypad1_down   6
+#define bit_joypad1_left   7
+#define bit_soft_reset     12
+#define bit_joypad1_a      13
+#define bit_joypad1_b      14
+#define bit_hard_reset     15
+
+void initGPIO(int gpioNo){
+	gpio_set_direction(gpioNo, GPIO_MODE_INPUT);
+	gpio_pulldown_en(gpioNo);
+}
+
+#if CONFIG_HW_PSX_ENA || CONFIG_HW_GPIO_ENA
+
+#ifndef CONFIG_HW_GPIO_ENA
+
 #define PSX_CLK CONFIG_HW_PSX_CLK
 #define PSX_DAT CONFIG_HW_PSX_DAT
 #define PSX_ATT CONFIG_HW_PSX_ATT
 #define PSX_CMD CONFIG_HW_PSX_CMD
 
-#define DELAY() asm("nop; nop; nop; nop;nop; nop; nop; nop;nop; nop; nop; nop;nop; nop; nop; nop;")
+#else
 
+#define PSX_CLK 14
+#define PSX_DAT 27
+#define PSX_ATT 16
+#define PSX_CMD 2
 
-#if CONFIG_HW_PSX_ENA
+#endif
 
 /* Sends and receives a byte from/to the PSX controller using SPI */
 static int psxSendRecv(int send) {
@@ -75,22 +100,58 @@ static void psxDone() {
 	GPIO_REG_WRITE(GPIO_OUT_W1TS_REG, (1<<PSX_ATT));
 }
 
-
 int psxReadInput() {
+	int b2b1 = 65535;
+#ifndef CONFIG_HW_GPIO_ENA
 	int b1, b2;
-
 	psxSendRecv(0x01); //wake up
 	psxSendRecv(0x42); //get data
 	psxSendRecv(0xff); //should return 0x5a
 	b1=psxSendRecv(0xff); //buttons byte 1
 	b2=psxSendRecv(0xff); //buttons byte 2
 	psxDone();
-	return (b2<<8)|b1;
+	b2b1 = (b2<<8)|b1;
+#else
+	if (gpio_get_level(CONFIG_HW_GPIO_UP) == 1)
+		b2b1 -=  1<<bit_joypad1_up;
 
+	if (gpio_get_level(CONFIG_HW_GPIO_DOWN) == 1)
+		b2b1 -=  1<<bit_joypad1_down;
+
+	if (gpio_get_level(CONFIG_HW_GPIO_RIGHT) == 1)
+		b2b1 -=  1<<bit_joypad1_right;
+
+	if (gpio_get_level(CONFIG_HW_GPIO_LEFT) == 1)
+		b2b1 -=  1<<bit_joypad1_left;
+
+	if (gpio_get_level(CONFIG_HW_GPIO_SELECT) == 1)
+		b2b1 -=  1<<bit_joypad1_select;
+
+	if (gpio_get_level(CONFIG_HW_GPIO_START) == 1) 
+		b2b1 -=  1<<bit_joypad1_start;
+
+	if (gpio_get_level(CONFIG_HW_GPIO_B) == 1)
+		b2b1 -=  1<<bit_joypad1_b;
+
+	if (gpio_get_level(CONFIG_HW_GPIO_A) == 1)
+		b2b1 -=  1<<bit_joypad1_a;
+		
+#endif
+	return b2b1;
 }
 
 
 void psxcontrollerInit() {
+#if CONFIG_HW_GPIO_ENA
+	initGPIO(CONFIG_HW_GPIO_START);
+	initGPIO(CONFIG_HW_GPIO_SELECT);
+	initGPIO(CONFIG_HW_GPIO_UP);
+	initGPIO(CONFIG_HW_GPIO_DOWN);
+	initGPIO(CONFIG_HW_GPIO_LEFT);
+	initGPIO(CONFIG_HW_GPIO_RIGHT);
+	initGPIO(CONFIG_HW_GPIO_B);
+	initGPIO(CONFIG_HW_GPIO_A);
+#else
 	volatile int delay;
 	int t;
 	gpio_config_t gpioconf[2]={
@@ -127,23 +188,12 @@ void psxcontrollerInit() {
 	} else {
 		printf("PSX controller type 0x%X\n", t);
 	}
+#endif
+
 }
 
 
 #else
-
-
-#define bit_joypad1_select 0
-#define bit_joypad1_start  3
-#define bit_joypad1_up     4
-#define bit_joypad1_right  5
-#define bit_joypad1_down   6
-#define bit_joypad1_left   7
-#define bit_soft_reset     12
-#define bit_joypad1_a      13
-#define bit_joypad1_b      14
-#define bit_hard_reset     15
-
 // #define KEY_A_PIN      35
 // #define KEY_B_PIN      36
 // #define KEY_UP_PIN     13
